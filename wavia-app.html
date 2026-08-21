@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wavia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<style>
+  :root{
+    --ocean-deep:#0A4C6E;
+    --ocean-mid:#0B6E8C;
+    --turq-mid:#22B8C8;
+    --turq-light:#5FE0D0;
+    --paper:#F4FAFB;
+    --ink:#08344A;
+    --ink-soft:#4C7285;
+    --card:#FFFFFF;
+    --line:#DCEAEE;
+    --z-critical:#E2483D;
+    --z-warn:#F2A93B;
+    --z-good:#1FAE8A;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;background:var(--ocean-deep);}
+  body{
+    font-family:'Inter',sans-serif;color:var(--ink);overflow:hidden;-webkit-font-smoothing:antialiased;
+    -webkit-touch-callout:none;-webkit-user-select:none;user-select:none;
+  }
+  input, textarea{
+    -webkit-touch-callout:default;-webkit-user-select:text;user-select:text;
+  }
+  .stage{position:relative;width:100%;height:100vh;height:100dvh;}
+
+  /* ---------- SPLASH ---------- */
+  .splash{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,var(--ocean-mid) 0%,var(--ocean-deep) 100%);z-index:20;
+    transition:opacity .7s ease, transform .7s ease;cursor:pointer;}
+  .splash.hide{opacity:0;transform:scale(1.04);pointer-events:none;}
+  .icon-wrap{width:132px;height:132px;opacity:0;animation:iconIn .5s ease forwards;}
+  @keyframes iconIn{to{opacity:1;}}
+  .wave-a,.wave-b{fill:none;stroke-linecap:round;stroke-dasharray:420;stroke-dashoffset:420;animation:draw 1s cubic-bezier(.65,0,.35,1) forwards;}
+  .wave-a{stroke:url(#dropGrad);stroke-width:26;animation-delay:.25s;}
+  .wave-b{stroke:#ffffff;stroke-width:14;opacity:.85;animation-delay:.55s;}
+  @keyframes draw{to{stroke-dashoffset:0;}}
+  .check-dot{transform:scale(0);transform-origin:256px 356px;animation:pop .5s cubic-bezier(.34,1.56,.64,1) forwards;animation-delay:1.35s;}
+  @keyframes pop{to{transform:scale(1);}}
+  .wordmark{margin-top:26px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:30px;letter-spacing:.5px;color:#fff;opacity:0;animation:riseIn .6s ease forwards;animation-delay:1.7s;}
+  .tagline{margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--turq-light);opacity:0;animation:riseIn .6s ease forwards;animation-delay:1.85s;}
+  @keyframes riseIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  .skip-hint{position:absolute;bottom:28px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1.5px;color:rgba(255,255,255,.4);opacity:0;animation:riseIn .5s ease forwards;animation-delay:2.2s;}
+
+  /* ---------- SCREENS SHELL ---------- */
+  .screens{position:absolute;inset:0;}
+  .screen{position:absolute;inset:0;background:var(--paper);display:flex;flex-direction:column;
+    transform:translateX(100%);transition:transform .38s cubic-bezier(.4,0,.2,1);overflow-y:auto;}
+  .screen.active{transform:translateX(0);}
+  .screen#menu{transform:translateX(0);}
+  .screen#menu.behind{transform:translateX(-28%);}
+
+  /* ---------- MENU ---------- */
+  #menu{padding:28px 20px 24px;}
+  .menu-header{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+  .menu-header svg{width:34px;height:34px;flex-shrink:0;}
+  .menu-header .brand{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:19px;color:var(--ocean-deep);}
+  .menu-header .brand span{color:var(--turq-mid);}
+  .greeting{margin:22px 0 4px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:26px;color:var(--ink);}
+  .subgreeting{font-size:14px;color:var(--ink-soft);margin-bottom:26px;}
+  .cards{display:flex;flex-direction:column;gap:14px;}
+  .card{display:flex;align-items:center;gap:16px;border-radius:18px;padding:20px;border:1px solid var(--line);
+    background:var(--card);cursor:pointer;text-align:left;font-family:inherit;transition:transform .15s ease;touch-action:manipulation;}
+  .card:active{transform:scale(.98);}
+  .card.primary{background:linear-gradient(135deg,var(--ocean-mid),var(--ocean-deep));border:none;box-shadow:0 10px 24px -10px rgba(10,76,110,.55);}
+  .card-icon{width:46px;height:46px;border-radius:13px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+  .card.primary .card-icon{background:rgba(255,255,255,.16);}
+  .card:not(.primary) .card-icon{background:#EAF6F7;}
+  .card-icon svg{width:24px;height:24px;}
+  .card-title{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16px;color:var(--ink);}
+  .card.primary .card-title{color:#fff;}
+  .card-sub{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
+  .card.primary .card-sub{color:rgba(255,255,255,.75);}
+  .card-arrow{margin-left:auto;color:var(--ink-soft);}
+  .card.primary .card-arrow{color:rgba(255,255,255,.85);}
+  .readout{margin-top:18px;display:flex;justify-content:center;gap:18px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);}
+  .readout b{color:var(--turq-mid);font-weight:500;}
+
+  /* ---------- ANALYSE SCREEN ---------- */
+  #analyse{padding:20px 20px 100px;}
+  .topbar{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+  .back-btn{width:36px;height:36px;border-radius:11px;border:1px solid var(--line);background:#fff;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+  .topbar h1{font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:600;margin:0;color:var(--ink);}
+
+  .level-select{display:flex;gap:8px;margin-bottom:6px;}
+  .level-chip{flex:1;text-align:center;padding:9px 6px;border-radius:12px;border:1px solid var(--line);
+    background:#fff;font-size:12px;font-weight:600;color:var(--ink-soft);cursor:pointer;line-height:1.3;}
+  .level-chip small{display:block;font-weight:500;font-size:10px;color:var(--ink-soft);opacity:.85;}
+  .level-chip.active{background:var(--ocean-mid);border-color:var(--ocean-mid);color:#fff;}
+  .level-chip.active small{color:rgba(255,255,255,.8);}
+  .level-hint{font-size:11.5px;color:var(--ink-soft);margin:6px 2px 14px;}
+
+  .scan-group{margin-bottom:18px;}
+  .scan-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:9px;
+    padding:12px;border-radius:14px;border:1.5px dashed var(--ocean-mid);
+    background:#fff;color:var(--ocean-deep);font-family:'Space Grotesk',sans-serif;font-weight:600;
+    font-size:13.5px;cursor:pointer;touch-action:manipulation;}
+  .scan-btn:active{background:#EAF6F7;}
+  .scan-btn.busy{opacity:.6;pointer-events:none;}
+  .scan-status{font-size:11.5px;color:var(--ink-soft);text-align:center;margin-top:8px;min-height:14px;}
+  .scan-status.error{color:var(--z-critical);}
+  .scan-status.success{color:var(--z-good);}
+
+  .legend{display:flex;gap:16px;margin-bottom:18px;padding:12px 14px;background:#fff;border:1px solid var(--line);
+    border-radius:14px;font-size:11.5px;color:var(--ink-soft);}
+  .legend span{display:flex;align-items:center;gap:6px;}
+  .legend i{width:9px;height:9px;border-radius:50%;display:inline-block;}
+
+  .param{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 16px 14px;margin-bottom:14px;}
+  .param-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
+  .param-name{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:15px;}
+  .param-unit{font-size:11px;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;}
+  .param-input-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .param-input-row input{width:84px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);
+    font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--ink);text-align:center;}
+  .param-input-row input:focus{outline:2px solid var(--turq-mid);outline-offset:1px;border-color:var(--turq-mid);}
+  .status-pill{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;}
+
+  .scale-wrap{position:relative;padding:11px 0;}
+  .scale-bar{position:relative;z-index:1;width:100%;height:6px;border-radius:3px;overflow:hidden;
+    display:flex;touch-action:none;cursor:pointer;}
+  .scale-bar div{height:100%;}
+  .marker{position:absolute;top:50%;left:0;z-index:2;width:26px;height:26px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 3px rgba(8,52,74,.35),0 0 0 1px rgba(8,52,74,.06);
+    transform:translate(-50%,-50%);transition:left .12s ease;touch-action:none;cursor:grab;outline:none;}
+  .marker.dragging{transition:none;cursor:grabbing;box-shadow:0 2px 6px rgba(8,52,74,.45),0 0 0 1px rgba(8,52,74,.08);}
+  .marker.pending{opacity:.45;}
+  .marker:focus-visible{outline:2px solid var(--turq-mid);outline-offset:2px;}
+
+  .param-name-group{display:flex;align-items:center;gap:7px;}
+  .info-btn{width:18px;height:18px;border-radius:50%;border:1px solid var(--ink-soft);background:none;
+    color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;font-size:11px;font-style:italic;font-weight:600;
+    line-height:1;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+  .info-btn.active{background:var(--ocean-mid);border-color:var(--ocean-mid);color:#fff;}
+  .param-explain{font-size:12px;line-height:1.5;color:var(--ink-soft);margin-top:0;
+    max-height:0;overflow:hidden;opacity:0;transition:max-height .25s ease, opacity .2s ease, margin-top .25s ease;}
+  .param-explain.open{max-height:120px;opacity:1;margin-top:12px;}
+
+  .save-bar{position:absolute;left:0;right:0;bottom:0;padding:14px 20px calc(14px + env(safe-area-inset-bottom));
+    background:linear-gradient(180deg,rgba(244,250,251,0),var(--paper) 30%);}
+  .save-btn{width:100%;padding:15px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--turq-mid),var(--ocean-mid));
+    color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:15px;cursor:pointer;}
+  .save-btn:active{transform:scale(.985);}
+
+  .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;
+    max-width:86%;padding:10px 18px;border-radius:16px;font-size:13px;line-height:1.4;text-align:center;
+    opacity:0;pointer-events:none;transition:opacity .3s ease, transform .3s ease;z-index:30;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  @media (prefers-reduced-motion: reduce){
+    .wave-a,.wave-b,.check-dot,.wordmark,.tagline,.skip-hint{animation:none !important;opacity:1 !important;stroke-dashoffset:0 !important;}
+    .screen{transition:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+
+  <!-- SPLASH -->
+  <div class="splash" id="splash">
+    <div class="icon-wrap">
+      <svg viewBox="0 0 512 512" width="132" height="132">
+        <defs><linearGradient id="dropGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#5FE0D0"/><stop offset="100%" stop-color="#22B8C8"/></linearGradient></defs>
+        <path class="wave-a" d="M96 240 C 96 240 130 190 176 190 C 222 190 222 240 268 240 C 314 240 314 190 360 190 C 388 190 404 205 416 224"/>
+        <path class="wave-b" d="M96 300 C 96 300 130 250 176 250 C 222 250 222 300 268 300 C 314 300 314 250 360 250 C 388 250 404 265 416 284"/>
+        <g class="check-dot">
+          <circle cx="256" cy="356" r="34" fill="url(#dropGrad)"/>
+          <path d="M240 356 L 251 368 L 274 344" fill="none" stroke="#0A4C6E" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+      </svg>
+    </div>
+    <div class="wordmark">Wavia</div>
+    <div class="tagline">Suivi qualité de l'eau</div>
+    <div class="skip-hint">Toucher pour continuer</div>
+  </div>
+
+  <div class="screens">
+    <!-- MENU -->
+    <div class="screen" id="menu">
+      <div class="menu-header">
+        <svg viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#0A4C6E"/><path d="M96 240 C 96 240 130 190 176 190 C 222 190 222 240 268 240 C 314 240 314 190 360 190 C 388 190 404 205 416 224" fill="none" stroke="#22B8C8" stroke-width="26" stroke-linecap="round"/><circle cx="256" cy="356" r="34" fill="#22B8C8"/><path d="M240 356 L 251 368 L 274 344" fill="none" stroke="#0A4C6E" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="brand">Wav<span>ia</span></div>
+      </div>
+      <div class="greeting">Bonjour 👋</div>
+      <div class="subgreeting">Que souhaitez-vous faire ?</div>
+      <div class="cards">
+        <button class="card primary" onclick="openAnalyse()">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 15c2-2.5 4-2.5 6 0s4 2.5 6 0s4-2.5 4-2.5" stroke="#5FE0D0" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="19" r="2.4" fill="#5FE0D0"/></svg></div>
+          <div><div class="card-title">Nouvelle analyse</div><div class="card-sub">Enregistrer une mesure (pH, chlore, etc.)</div></div>
+          <div class="card-arrow">›</div>
+        </button>
+        <button class="card" onclick="toast('Écran « Nouveau client » à venir')">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none"><circle cx="10" cy="9" r="3.2" stroke="#0B6E8C" stroke-width="2"/><path d="M4 19c1-3 3.5-4.5 6-4.5s5 1.5 6 4.5" stroke="#0B6E8C" stroke-width="2" stroke-linecap="round"/><path d="M18 8v5M15.5 10.5h5" stroke="#22B8C8" stroke-width="2" stroke-linecap="round"/></svg></div>
+          <div><div class="card-title">Nouveau client</div><div class="card-sub">Créer une fiche piscine</div></div>
+          <div class="card-arrow">›</div>
+        </button>
+        <button class="card" onclick="toast('Écran « Historique » à venir')">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 17l4-5 3.5 3L18 8" stroke="#0B6E8C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="18" cy="8" r="1.6" fill="#22B8C8"/></svg></div>
+          <div><div class="card-title">Historique</div><div class="card-sub">Consulter les mesures passées</div></div>
+          <div class="card-arrow">›</div>
+        </button>
+      </div>
+      <div class="readout">pH <b>7.2</b> · Cl <b>1.8 mg/L</b> · Dernière analyse <b>hier</b></div>
+    </div>
+
+    <!-- ANALYSE -->
+    <div class="screen" id="analyse">
+      <div class="topbar">
+        <button class="back-btn" onclick="closeAnalyse()" aria-label="Retour">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="#08344A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <h1>Nouvelle analyse</h1>
+      </div>
+
+      <div class="level-select" id="levelSelect">
+        <div class="level-chip active" data-level="1">Niveau 1<small>Routine client</small></div>
+        <div class="level-chip" data-level="2">Niveau 2<small>Technicien</small></div>
+        <div class="level-chip" data-level="3">Niveau 3<small>Labo</small></div>
+      </div>
+      <div class="level-hint" id="levelHint">Auto-mesure à la bandelette, faible précision.</div>
+
+      <div class="scan-group" id="scanGroup" style="display:none;">
+        <label class="scan-btn" id="cameraScanBtn" for="cameraInput">
+          <svg viewBox="0 0 24 24" fill="none" width="20" height="20">
+            <path d="M4 8.5C4 7.67 4.67 7 5.5 7H8l1-1.6c.18-.28.5-.4.8-.4h4.4c.3 0 .62.12.8.4L16 7h2.5c.83 0 1.5.67 1.5 1.5v9c0 .83-.67 1.5-1.5 1.5h-13C4.67 19 4 18.33 4 17.5v-9Z"
+                  stroke="#08344A" stroke-width="1.7" stroke-linejoin="round"/>
+            <circle cx="12" cy="13" r="3.4" stroke="#08344A" stroke-width="1.7"/>
+          </svg>
+          <span>Importer une photo (SpinTouch)</span>
+        </label>
+        <div class="scan-status" id="scanStatus"></div>
+      </div>
+      <input type="file" accept="image/*" id="cameraInput" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;">
+
+
+      <div class="legend">
+        <span><i style="background:var(--z-critical)"></i>Critique</span>
+        <span><i style="background:var(--z-warn)"></i>À corriger</span>
+        <span><i style="background:var(--z-good)"></i>Correct</span>
+      </div>
+
+
+      <div id="paramList"></div>
+
+      <div style="height:70px"></div>
+    </div>
+  </div>
+
+  <div class="save-bar" id="saveBar" style="display:none;">
+    <button class="save-btn" onclick="saveAnalysis()">Enregistrer l'analyse</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+  /* ---------- SPLASH ---------- */
+  const splash = document.getElementById('splash');
+  let revealed = false;
+  function reveal(){
+    if(revealed) return; revealed = true;
+    splash.classList.add('hide');
+    setTimeout(()=>{ splash.style.display='none'; }, 700);
+  }
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  setTimeout(reveal, reduced ? 400 : 2500);
+  splash.addEventListener('click', reveal);
+
+  /* ---------- TOAST ---------- */
+  let toastTimer;
+  function toast(msg, duration){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=> t.classList.remove('show'), duration || 2200);
+  }
+
+  /* ---------- SCREEN NAV ---------- */
+  const menuEl = document.getElementById('menu');
+  const analyseEl = document.getElementById('analyse');
+  const saveBar = document.getElementById('saveBar');
+
+  function openAnalyse(){
+    menuEl.classList.add('behind');
+    analyseEl.classList.add('active');
+    saveBar.style.display = 'block';
+  }
+  function closeAnalyse(){
+    menuEl.classList.remove('behind');
+    analyseEl.classList.remove('active');
+    saveBar.style.display = 'none';
+  }
+  function saveAnalysis(){
+    toast('Analyse enregistrée ✓');
+    setTimeout(closeAnalyse, 600);
+  }
+
+  /* ---------- LEVEL SELECT ---------- */
+  const levelHints = {
+    1: "Auto-mesure à la bandelette, faible précision.",
+    2: "Mesure au photomètre basique lors d'une visite d'entretien.",
+    3: "Mesure de référence au photomètre SpinTouch en magasin."
+  };
+  document.querySelectorAll('.level-chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      document.querySelectorAll('.level-chip').forEach(c=>c.classList.remove('active'));
+      chip.classList.add('active');
+      const level = parseInt(chip.dataset.level, 10);
+      document.getElementById('levelHint').textContent = levelHints[level];
+      document.getElementById('scanGroup').style.display = level === 3 ? 'block' : 'none';
+      renderParams(level);
+    });
+  });
+
+  /* ---------- PARAMETERS CONFIG ---------- */
+  // Chaque paramètre : domaine affiché [min,max] et bornes des 5 zones
+  // (critique bas / bas / correct / haut / critique haut)
+  // "levels" indique dans quel(s) niveau(x) d'analyse (1/2/3) le paramètre apparaît
+  const PARAMS = [
+    {
+      id:'ph', name:'pH', unit:'', min:6.0, max:8.4, step:0.1, def:7.2,
+      bounds:[6.8, 7.0, 7.4, 7.6], levels:[1,2,3],
+      explain:"Mesure l'acidité de l'eau. Trop bas : irrite peau et yeux, corrode les équipements. Trop haut : l'eau se trouble et le chlore agit moins bien."
+    },
+    {
+      id:'cl', name:'Chlore libre', unit:'mg/L', min:0, max:6, step:0.1, def:1.6,
+      bounds:[0.5, 1.0, 3.0, 5.0], levels:[1,2,3],
+      explain:"Désinfecte l'eau. Trop bas : plus de protection contre bactéries et algues. Trop haut : irritant pour la peau et les yeux."
+    },
+    {
+      id:'cltotal', name:'Chlore total', unit:'mg/L', min:0, max:6, step:0.1, def:2.0,
+      bounds:[0.5, 1.0, 3.0, 5.0], levels:[2,3],
+      explain:"Somme du chlore libre (actif) et du chlore combiné (déjà consommé). Un total proche du chlore libre est bon signe."
+    },
+    {
+      id:'clcombine', name:'Chlore combiné', unit:'mg/L', min:0, max:2, step:0.05, def:0.1,
+      bounds:[0, 0, 0.2, 0.5], levels:[3],
+      explain:"Chlore déjà « usé », lié aux impuretés. Idéalement proche de zéro : au-delà, il sent fort et irrite les yeux — signe qu'un traitement choc est utile."
+    },
+    {
+      id:'brome', name:'Brome', unit:'mg/L', min:0, max:8, step:0.1, def:3.0,
+      bounds:[1, 2, 4, 6], levels:[1,2,3],
+      explain:"Désinfectant alternatif au chlore (fréquent en spa). Trop bas : eau non protégée. Trop haut : irritant pour la peau."
+    },
+    {
+      id:'tac', name:'TAC — Alcalinité', unit:'mg/L', min:0, max:200, step:1, def:100,
+      bounds:[50, 80, 120, 150], levels:[1,2,3],
+      explain:"Stabilise le pH. Trop bas : le pH varie sans arrêt. Trop haut : le pH devient difficile à corriger."
+    },
+    {
+      id:'th', name:'TH — Dureté calcique', unit:'mg/L', min:0, max:500, step:5, def:200,
+      bounds:[100, 150, 250, 400], levels:[1,2,3],
+      explain:"Indique la quantité de calcaire dans l'eau. Trop bas : l'eau devient agressive. Trop haut : l'eau se trouble et entartre les équipements."
+    },
+    {
+      id:'stab', name:'Stabilisant', unit:'mg/L', min:0, max:100, step:1, def:35,
+      bounds:[10, 20, 50, 75], levels:[1,2,3],
+      explain:"Protège le chlore du soleil. Trop bas : le chlore se dégrade vite. Trop haut : il bloque l'action du chlore (« chlore verrouillé »)."
+    },
+    {
+      id:'sel', name:'Sel', unit:'mg/L', min:0, max:8000, step:50, def:4000,
+      bounds:[2000, 3000, 5000, 6000], levels:[1,3],
+      explain:"Alimente l'électrolyseur au sel qui produit le chlore. Trop bas : pas assez de chlore généré. Trop haut : peut endommager les équipements et le revêtement."
+    },
+    {
+      id:'phosphates', name:'Phosphates', unit:'µg/L', min:0, max:1000, step:10, def:20,
+      bounds:[0, 0, 100, 500], levels:[1,3],
+      explain:"Nutriment pour les algues. Plus le taux est bas, mieux c'est : au-delà d'un certain seuil, il favorise les algues même en présence de chlore."
+    },
+    {
+      id:'cuivre', name:'Cuivre', unit:'mg/L', min:0, max:1, step:0.01, def:0.05,
+      bounds:[0, 0, 0.2, 0.4], levels:[3],
+      explain:"Métal parfois présent dans l'eau ou les traitements. Trop élevé, il tache le bassin et donne des reflets verts aux cheveux clairs."
+    },
+    {
+      id:'fer', name:'Fer', unit:'mg/L', min:0, max:0.5, step:0.01, def:0.02,
+      bounds:[0, 0, 0.1, 0.3], levels:[3],
+      explain:"Métal parfois présent dans l'eau de remplissage. Trop élevé, il trouble l'eau et tache les surfaces (teinte rouille)."
+    }
+  ];
+
+  const ZONE_COLORS = ['var(--z-critical)','var(--z-warn)','var(--z-good)','var(--z-warn)','var(--z-critical)'];
+  const ZONE_LABELS = ['Critique — trop bas','Trop bas','Correct','Trop haut','Critique — trop haut'];
+
+  function zoneIndex(value, bounds){
+    if(value < bounds[0]) return 0;
+    if(value < bounds[1]) return 1;
+    if(value < bounds[2]) return 2;
+    if(value < bounds[3]) return 3;
+    return 4;
+  }
+  function pct(value, min, max){
+    return Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
+  }
+
+  const listEl = document.getElementById('paramList');
+  // Conserve valeur + statut "saisi" de chaque paramètre quand on change de niveau
+  const savedState = {};
+
+  function renderParams(level){
+    listEl.querySelectorAll('input[data-id]').forEach(inp=>{
+      savedState[inp.dataset.id] = { value: inp.value, touched: inp.dataset.touched === 'true' };
+    });
+
+    listEl.innerHTML = '';
+    PARAMS.filter(p => p.levels.includes(level)).forEach(p=>{
+      const edges = [p.min, ...p.bounds, p.max];
+      const segHtml = edges.slice(0,-1).map((e,i)=>{
+        const w = pct(edges[i+1],p.min,p.max) - pct(e,p.min,p.max);
+        return `<div style="width:${w}%;background:${ZONE_COLORS[i]}"></div>`;
+      }).join('');
+
+      const prior = savedState[p.id];
+      const touchedInit = prior ? prior.touched : false;
+      const startVal = touchedInit ? prior.value : '';
+      // position neutre du curseur tant qu'aucune valeur n'a été saisie
+      const neutralValue = (p.bounds[1] + p.bounds[2]) / 2;
+
+      const card = document.createElement('div');
+      card.className = 'param';
+      card.innerHTML = `
+        <div class="param-head">
+          <span class="param-name-group">
+            <span class="param-name">${p.name}</span>
+            <button class="info-btn" type="button" aria-label="Qu'est-ce que ${p.name} ?">i</button>
+          </span>
+          <span class="param-unit">${p.unit}</span>
+        </div>
+        <div class="param-input-row">
+          <input type="number" step="${p.step}" placeholder="—" value="${startVal}" data-id="${p.id}" data-touched="${touchedInit}">
+          <span class="status-pill" id="pill-${p.id}"></span>
+        </div>
+        <div class="scale-wrap">
+          <div class="scale-bar" id="bar-${p.id}">${segHtml}</div>
+          <div class="marker" id="marker-${p.id}" tabindex="0" role="slider"
+               aria-label="Curseur ${p.name}" aria-valuemin="${p.min}" aria-valuemax="${p.max}"></div>
+        </div>
+        <div class="param-explain">${p.explain}</div>
+      `;
+      listEl.appendChild(card);
+
+      const infoBtn = card.querySelector('.info-btn');
+      const explainEl = card.querySelector('.param-explain');
+      infoBtn.addEventListener('click', ()=>{
+        const open = explainEl.classList.toggle('open');
+        infoBtn.classList.toggle('active', open);
+      });
+
+      const input = card.querySelector('input');
+      const marker = card.querySelector(`#marker-${p.id}`);
+      const pill = card.querySelector(`#pill-${p.id}`);
+      const bar = card.querySelector(`#bar-${p.id}`);
+
+      function decimals(step){ return (String(step).split('.')[1] || '').length; }
+
+      function render(){
+        const touched = input.dataset.touched === 'true';
+        const v = touched ? parseFloat(input.value) : neutralValue;
+        const valid = touched && !isNaN(parseFloat(input.value));
+        const zi = zoneIndex(v, p.bounds);
+        const color = ZONE_COLORS[zi];
+
+        pill.textContent = valid ? ZONE_LABELS[zi] : '—';
+        pill.style.background = valid ? color.replace('var(','color-mix(in srgb,').replace(')',' 16%, white)') : '#EEF3F4';
+        pill.style.color = valid ? color : 'var(--ink-soft)';
+
+        marker.style.left = pct(v,p.min,p.max) + '%';
+        marker.classList.toggle('pending', !valid);
+        marker.setAttribute('aria-valuenow', valid ? input.value : '');
+      }
+
+      function setValue(rawValue, markTouched){
+        const stepsCount = Math.round((rawValue - p.min) / p.step);
+        let val = p.min + stepsCount * p.step;
+        val = Math.max(p.min, Math.min(p.max, val));
+        val = parseFloat(val.toFixed(decimals(p.step)));
+        input.value = val;
+        if(markTouched){ input.dataset.touched = 'true'; }
+        render();
+      }
+
+      input.addEventListener('focus', ()=> input.select());
+      input.addEventListener('input', ()=>{
+        input.dataset.touched = input.value !== '' ? 'true' : 'false';
+        render();
+      });
+
+      // ---- glisser-déposer sur l'échelle colorée ----
+      let dragging = false;
+      function valueFromClientX(clientX){
+        const rect = bar.getBoundingClientRect();
+        const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+        return p.min + ratio * (p.max - p.min);
+      }
+      function startDrag(e){
+        dragging = true;
+        marker.classList.add('dragging');
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        setValue(valueFromClientX(clientX), true);
+        e.preventDefault();
+      }
+      function moveDrag(e){
+        if(!dragging) return;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        setValue(valueFromClientX(clientX), true);
+      }
+      function endDrag(){ dragging = false; marker.classList.remove('dragging'); }
+
+      marker.addEventListener('pointerdown', startDrag);
+      bar.addEventListener('pointerdown', startDrag);
+      window.addEventListener('pointermove', moveDrag);
+      window.addEventListener('pointerup', endDrag);
+
+      marker.addEventListener('keydown', (e)=>{
+        const touched = input.dataset.touched === 'true';
+        const current = touched ? parseFloat(input.value) : neutralValue;
+        if(e.key === 'ArrowRight' || e.key === 'ArrowUp'){ setValue(current + p.step, true); e.preventDefault(); }
+        if(e.key === 'ArrowLeft' || e.key === 'ArrowDown'){ setValue(current - p.step, true); e.preventDefault(); }
+      });
+
+      render();
+    });
+  }
+
+  /* ---------- IMPORT PHOTO SPINTOUCH (Niveau 3) ---------- */
+  const scanBtn = document.getElementById('cameraScanBtn');
+  const cameraInput = document.getElementById('cameraInput');
+  const scanStatus = document.getElementById('scanStatus');
+
+  function setScanStatus(msg, state){
+    scanStatus.textContent = msg;
+    scanStatus.classList.remove('error','success');
+    if(state) scanStatus.classList.add(state);
+  }
+
+  cameraInput.addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    e.target.value = '';
+    if(file) scanSpinTouch(file);
+  });
+
+  const SPIN_TOUCH_MAP = {
+    fcl:'cl', tcl:'cltotal', ccl:'clcombine', ph:'ph', alk:'tac',
+    hard:'th', cya:'stab', copper:'cuivre', iron:'fer', phos:'phosphates'
+  };
+
+  // Motifs de reconnaissance des étiquettes affichées par le SpinTouch
+  const SPIN_TOUCH_PATTERNS = {
+    fcl:   /\bFCL\b\D{0,4}([\d]+[.,]?\d*)/i,
+    tcl:   /\bTCL\b\D{0,4}([\d]+[.,]?\d*)/i,
+    ccl:   /\bCCL\b\D{0,4}([\d]+[.,]?\d*)/i,
+    ph:    /\bpH\b\D{0,4}([\d]+[.,]?\d*)/i,
+    alk:   /\bALK\b\D{0,4}([\d]+[.,]?\d*)/i,
+    hard:  /\bHARD\b\D{0,4}([\d]+[.,]?\d*)/i,
+    cya:   /\bCYA\b\D{0,4}([\d]+[.,]?\d*)/i,
+    copper:/\bCOPPER\b\D{0,4}([\d]+[.,]?\d*)/i,
+    iron:  /\bIRON\b\D{0,4}([\d]+[.,]?\d*)/i,
+    phos:  /\bPHOS\b\D{0,4}([\d]+[.,]?\d*)/i
+  };
+
+  // Analyse purement locale (aucune IA) : cherche chaque étiquette connue
+  // dans le texte reconnu par Vision et en extrait le nombre associé.
+  function extractSpinTouchValues(fullText){
+    const result = {};
+    Object.entries(SPIN_TOUCH_PATTERNS).forEach(([key, re])=>{
+      const m = fullText.match(re);
+      result[key] = m ? parseFloat(m[1].replace(',', '.')) : null;
+    });
+    return result;
+  }
+
+  function fileToBase64(file){
+    return new Promise((resolve, reject)=>{
+      const reader = new FileReader();
+      reader.onload = ()=> resolve(reader.result.split(',')[1]);
+      reader.onerror = ()=> reject(new Error('Lecture du fichier impossible'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function applySpinTouchValues(parsed){
+    let count = 0;
+    Object.entries(SPIN_TOUCH_MAP).forEach(([key, id])=>{
+      const val = parsed[key];
+      if(val === null || val === undefined || isNaN(val)) return;
+      const input = listEl.querySelector(`input[data-id="${id}"]`);
+      if(!input) return;
+      input.value = val;
+      input.dataset.touched = 'true';
+      input.dispatchEvent(new Event('input', { bubbles:true }));
+      count++;
+    });
+    if(count > 0) setScanStatus(`${count} valeurs importées ✓`, 'success');
+    else setScanStatus('Aucune valeur reconnue sur la photo', 'error');
+    scanBtn.classList.remove('busy');
+  }
+
+  // ---- Pont vers le code natif iOS (VisionKit / VNRecognizeTextRequest) ----
+  // Le côté Swift doit exposer un WKScriptMessageHandler nommé "spinTouchOCR" :
+  // il reçoit { image: <base64 JPEG/PNG> }, lance VNRecognizeTextRequest en
+  // local sur l'image, puis rappelle window.__onSpinTouchOCRResult(lignesDeTexte)
+  // avec un tableau de chaînes, ou window.__onSpinTouchOCRError(message) en cas d'échec.
+  // Tout se passe sur l'appareil : aucun réseau, aucun modèle d'IA générative.
+
+  window.__onSpinTouchOCRResult = function(lines){
+    try{
+      const fullText = Array.isArray(lines) ? lines.join('\n') : String(lines || '');
+      const parsed = extractSpinTouchValues(fullText);
+      applySpinTouchValues(parsed);
+    }catch(err){
+      console.error('Analyse locale SpinTouch:', err);
+      setScanStatus('Échec de lecture des résultats', 'error');
+      scanBtn.classList.remove('busy');
+    }
+  };
+
+  window.__onSpinTouchOCRError = function(message){
+    setScanStatus('Échec : ' + (message || 'reconnaissance impossible'), 'error');
+    scanBtn.classList.remove('busy');
+  };
+
+  // ---- Repli navigateur pour les tests (mode démo, hors app iOS) ----
+  // Utilise Tesseract.js (moteur OCR classique en WebAssembly, exécuté dans
+  // le navigateur) : la photo n'est envoyée à aucun serveur ni à aucune IA
+  // générative. Seule la librairie OCR elle-même est chargée une fois depuis
+  // un CDN au démarrage de la page, comme n'importe quelle librairie JS.
+  let ocrWorkerPromise = null;
+  function getOcrWorker(){
+    if(!ocrWorkerPromise){
+      if(typeof Tesseract === 'undefined'){
+        return Promise.reject(new Error("Librairie OCR indisponible (échec de chargement depuis le CDN)."));
+      }
+      ocrWorkerPromise = Tesseract.createWorker('eng').catch(err=>{
+        ocrWorkerPromise = null; // permet de retenter au prochain essai
+        throw new Error("Impossible de démarrer l'OCR local (Web Worker/WASM probablement bloqué par cet aperçu) : " + errorText(err));
+      });
+    }
+    return ocrWorkerPromise;
+  }
+
+  async function runBrowserOCR(file){
+    const worker = await getOcrWorker();
+    const { data } = await worker.recognize(file);
+    return data.text || '';
+  }
+
+  // Toujours renvoyer un message exploitable, même si ce qui est intercepté
+  // n'est pas une vraie instance d'Error (Worker/WASM peuvent rejeter avec
+  // autre chose : chaîne, événement, objet vide...).
+  function errorText(err){
+    if(!err) return 'erreur inconnue';
+    if(err.message) return err.message;
+    if(typeof err === 'string') return err;
+    try{ return JSON.stringify(err); }catch(e){ return String(err); }
+  }
+
+  function withTimeout(promise, ms, label){
+    let timer;
+    const timeout = new Promise((_, reject)=>{
+      timer = setTimeout(()=> reject(new Error(`${label} n'a pas répondu après ${ms/1000}s.`)), ms);
+    });
+    return Promise.race([promise, timeout]).finally(()=> clearTimeout(timer));
+  }
+
+  async function scanSpinTouch(file){
+    scanBtn.classList.add('busy');
+    setScanStatus('Lecture de la photo…');
+    try{
+      const bridge = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.spinTouchOCR;
+
+      if(bridge){
+        const base64 = await fileToBase64(file);
+        setScanStatus('Analyse locale de la photo (Vision, sur l’appareil)…');
+        bridge.postMessage({ image: base64 });
+        // La suite arrive de façon asynchrone via __onSpinTouchOCRResult / __onSpinTouchOCRError,
+        // appelés par le code natif une fois la reconnaissance terminée.
+        return;
+      }
+
+      // Pas de pont natif ici : on est dans un aperçu / navigateur de test.
+      setScanStatus('Reconnaissance locale (mode test navigateur)…');
+      const text = await withTimeout(runBrowserOCR(file), 25000, "L'OCR local");
+      const parsed = extractSpinTouchValues(text);
+      applySpinTouchValues(parsed);
+    }catch(err){
+      console.error('Import SpinTouch:', err);
+      setScanStatus('Échec : ' + errorText(err), 'error');
+      scanBtn.classList.remove('busy');
+    }
+  }
+
+  renderParams(1);
+</script>
+
+</body>
+</html>
