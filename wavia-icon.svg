@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B6E8C"/>
+      <stop offset="100%" stop-color="#0A4C6E"/>
+    </linearGradient>
+    <linearGradient id="drop" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#5FE0D0"/>
+      <stop offset="100%" stop-color="#22B8C8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- fond arrondi type icône app -->
+  <rect x="0" y="0" width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- vagues en fond, plus marquées pour incarner "Wavia" -->
+  <path d="M0 300 Q 85 270 170 300 T 340 300 T 512 300 V512 H0 Z" fill="#ffffff" opacity="0.06"/>
+  <path d="M0 340 Q 85 312 170 340 T 340 340 T 512 340 V512 H0 Z" fill="#ffffff" opacity="0.08"/>
+  <path d="M0 380 Q 85 355 170 380 T 340 380 T 512 380 V512 H0 Z" fill="#ffffff" opacity="0.10"/>
+
+  <!-- vague principale stylisée, motif central -->
+  <path d="M96 240
+           C 96 240 130 190 176 190
+           C 222 190 222 240 268 240
+           C 314 240 314 190 360 190
+           C 388 190 404 205 416 224"
+        fill="none" stroke="url(#drop)" stroke-width="26" stroke-linecap="round"/>
+
+  <path d="M96 300
+           C 96 300 130 250 176 250
+           C 222 250 222 300 268 300
+           C 314 300 314 250 360 250
+           C 388 250 404 265 416 284"
+        fill="none" stroke="#ffffff" stroke-width="14" stroke-linecap="round" opacity="0.85"/>
+
+  <!-- goutte / check discret en dessous : validation qualité -->
+  <circle cx="256" cy="356" r="34" fill="url(#drop)"/>
+  <path d="M240 356 L 251 368 L 274 344" fill="none" stroke="#0A4C6E" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
