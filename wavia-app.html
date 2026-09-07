@@ -508,18 +508,10 @@
     #algaeColorChoice{grid-template-columns:repeat(5, 92px);}
 
     /* Modale "To do list" : dialogue centré classique, plus un tiroir "collé"
-       en bas d'écran comme sur mobile */
+       en bas d'écran comme sur mobile. Une seule colonne (même sur bureau) :
+       la disposition à 2 colonnes rendait les préconisations peu claires. */
     .todo-modal{align-items:center;}
-    .todo-modal-card{border-radius:20px;max-width:840px;max-height:85vh;}
-
-    /* Étapes de la to-do list sur 2 colonnes ; l'étape prioritaire (renouvellement
-       d'eau), la bannière d'avertissement et le message "aucune étape" gardent
-       toute la largeur pour rester bien lisibles */
-    .todo-modal-body{display:grid;grid-template-columns:1fr 1fr;column-gap:14px;align-content:start;}
-    .todo-modal-body .todo-step{margin-bottom:0;}
-    .todo-modal-body .todo-step[data-step-id="stab-renewal"],
-    .todo-modal-body .todo-warning-banner,
-    .todo-modal-body .historique-empty{grid-column:1 / -1;}
+    .todo-modal-card{border-radius:20px;max-width:560px;max-height:85vh;}
   }
 
   /* ---------- EXPORT PDF (mise en page imprimée A4, voir #printArea et exportPDF() en JS) ----------
@@ -1866,12 +1858,12 @@
         if(stabHighOrNear){
           const hypoG = Math.round((clTarget - value) * 5.83 * volume);
           action = `Remonter le chlore libre vers ${fmt(clTarget)} mg/L. Stabilisant déjà élevé ou proche du seuil : évite le chlore choc stabilisé, qui ferait encore grimper le stabilisant — utilise un chlore <b>non stabilisé</b> (Hypo-Chlore) à la place.`;
-          options = [{ product: DJ_PRODUCTS.hypoChlore, amount: fmtKg(hypoG) }];
+          options = [{ product: DJ_PRODUCTS.hypoChlore, amount: fmtKg(hypoG), rawGrams: hypoG }];
         } else {
           action = `Remonter le chlore libre vers ${fmt(clTarget)} mg/L (traitement choc ponctuel — le grammage ne s'applique qu'au chlore choc, pas au chlore lent)`;
           options = [
-            { product: DJ_PRODUCTS.chloreChoc, amount: fmtKg(g), label: 'Granulés' },
-            { product: DJ_PRODUCTS.chloreChocPastilles, amount: fmtPastilles(g, 20), label: 'Pastilles (dosage facile)' }
+            { product: DJ_PRODUCTS.chloreChoc, amount: fmtKg(g), label: 'Granulés', rawGrams: g },
+            { product: DJ_PRODUCTS.chloreChocPastilles, amount: fmtPastilles(g, 20), label: 'Pastilles (dosage facile)', rawGrams: g }
           ];
         }
       } else if(value >= b[2]){
@@ -2126,7 +2118,7 @@
           title: 'Algue verte (légère)',
           detail: `Brosse les parois et le fond avant traitement. Stabilisant déjà élevé ou proche du seuil : utilise un chlore <b>non stabilisé</b> (Hypo-Chlore) pour le choc plutôt que du chlore choc stabilisé.${noteHypo}`,
           options: [
-            { product: DJ_PRODUCTS.hypoChlore, label: 'Traitement choc', amount: fmtKg(hypoG) }
+            { product: DJ_PRODUCTS.hypoChlore, label: 'Traitement choc', amount: fmtKg(hypoG), rawGrams: hypoG }
           ]
         };
       }
@@ -2134,8 +2126,8 @@
         title: 'Algue verte (légère)',
         detail: `Brosse les parois et le fond avant traitement, puis fais un choc au chlore.${noteAlreadyPlanned}`,
         options: [
-          { product: DJ_PRODUCTS.chloreChoc, label: 'Granulés', amount: fmtKg(chocG) },
-          { product: DJ_PRODUCTS.chloreChocPastilles, label: 'Pastilles (dosage facile)', amount: fmtPastilles(chocG, 20) }
+          { product: DJ_PRODUCTS.chloreChoc, label: 'Granulés', amount: fmtKg(chocG), rawGrams: chocG },
+          { product: DJ_PRODUCTS.chloreChocPastilles, label: 'Pastilles (dosage facile)', amount: fmtPastilles(chocG, 20), rawGrams: chocG }
         ]
       };
     }
@@ -2222,6 +2214,25 @@
       else if(id === 'phosphates') targetDisplay = '0';
       else targetDisplay = String(Math.round(mid));
       const chosenIndex = selectedProductChoice[id] ?? 0;
+      let option = (rec.options && rec.options[chosenIndex]) ? rec.options[chosenIndex] : null;
+
+      // Chlore libre + traitement anti-algues (vert clair) utilisent souvent le même produit
+      // (chlore choc). Pour éviter que le client ne voie que la moitié de la quantité réelle
+      // dans la to-do list, on cumule les deux ici en un seul total pour ce produit.
+      if(id === 'cl' && option && option.product && typeof option.rawGrams === 'number'){
+        const algaeCard = buildAntiAlgueCard(volume);
+        if(algaeCard){
+          const matchingAlgaeOption = algaeCard.options.find(o => o.product === option.product && typeof o.rawGrams === 'number');
+          if(matchingAlgaeOption){
+            const totalGrams = option.rawGrams + matchingAlgaeOption.rawGrams;
+            const totalAmount = option.product === DJ_PRODUCTS.chloreChocPastilles
+              ? fmtPastilles(totalGrams, 20)
+              : fmtKg(totalGrams);
+            option = { ...option, amount: totalAmount, rawGrams: totalGrams };
+          }
+        }
+      }
+
       steps.push({
         id,
         label: rec.label,
@@ -2229,7 +2240,7 @@
         currentValue: rec.value,
         targetValue: targetDisplay,
         unit: rec.unit,
-        option: (rec.options && rec.options[chosenIndex]) ? rec.options[chosenIndex] : null,
+        option,
         action: rec.action
       });
     });
