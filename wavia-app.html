@@ -178,6 +178,11 @@
     background:#fff;font-family:'Aptos','Inter',sans-serif;font-size:14.5px;color:var(--ink);}
   .field-textarea{resize:none;min-height:60px;line-height:1.4;}
   .field-input:focus, .field-textarea:focus{outline:2px solid var(--turq-mid);outline-offset:1px;border-color:var(--turq-mid);}
+  .field-input.field-missing{border-color:var(--z-critical);box-shadow:0 0 0 3px rgba(226,72,61,.15);animation:fieldMissingPulse 1.4s ease 2;}
+  @keyframes fieldMissingPulse{
+    0%, 100%{box-shadow:0 0 0 3px rgba(226,72,61,.15);}
+    50%{box-shadow:0 0 0 5px rgba(226,72,61,.28);}
+  }
 
   .choice-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
   .choice-chip{padding:9px 14px;border-radius:12px;border:1px solid var(--line);background:#fff;
@@ -738,11 +743,11 @@
           <div class="balance-inputs">
             <div class="field-group" style="margin-bottom:0;">
               <label class="field-label" for="poolVolume">Volume du bassin (m³)</label>
-              <input class="field-input" type="number" inputmode="numeric" step="1" id="poolVolume" value="40">
+              <input class="field-input" type="number" inputmode="numeric" step="1" id="poolVolume" placeholder="Ex. 40">
             </div>
             <div class="field-group" style="margin-bottom:0;">
               <label class="field-label" for="poolTemp">Température de l'eau (°C)</label>
-              <input class="field-input" type="number" inputmode="numeric" step="1" id="poolTemp" value="26">
+              <input class="field-input" type="number" inputmode="numeric" step="1" id="poolTemp" placeholder="Ex. 26">
             </div>
           </div>
         </div>
@@ -1004,8 +1009,8 @@
     selectedWaterColor = 'transparente';
     selectedAlgaeColor = 'aucune';
     dilutionAccepted = null;
-    poolVolumeInput.value = 40;
-    poolTempInput.value = 26;
+    poolVolumeInput.value = '';
+    poolTempInput.value = '';
     document.querySelectorAll('#waterColorChoice .water-card').forEach(c=>{
       c.classList.toggle('active', c.dataset.water === 'transparente');
     });
@@ -1312,11 +1317,31 @@
     resultsEl.classList.add('active');
     dilutionAccepted = null;
     computeResults();
+    setTimeout(checkRequiredFieldsAndHighlight, 350);
   }
   function closeResults(){
     resultsEl.classList.remove('active');
     analyseEl.classList.add('active');
   }
+
+  // Le volume et la température sont nécessaires pour des préconisations précises
+  // (calcul des quantités de produit, courbe de la balance de Taylor). S'ils n'ont
+  // pas été renseignés au moment de lancer l'analyse, on les met en évidence en
+  // rouge et on scrolle jusqu'au premier champ manquant plutôt que de les laisser
+  // passer inaperçus avec une valeur par défaut silencieuse.
+  function checkRequiredFieldsAndHighlight(){
+    const missing = [poolVolumeInput, poolTempInput].filter(inp => inp.value.trim() === '');
+    [poolVolumeInput, poolTempInput].forEach(inp => inp.classList.remove('field-missing'));
+    if(missing.length === 0) return;
+    missing.forEach(inp => inp.classList.add('field-missing'));
+    missing[0].scrollIntoView({ behavior:'smooth', block:'center' });
+    toast('Renseigne le volume et la température pour des préconisations précises');
+  }
+  [poolVolumeInput, poolTempInput].forEach(inp=>{
+    inp.addEventListener('input', ()=>{
+      if(inp.value.trim() !== '') inp.classList.remove('field-missing');
+    });
+  });
 
   function getParamValue(id){
     const input = listEl.querySelector(`input[data-id="${id}"]`);
