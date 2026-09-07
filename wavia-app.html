@@ -529,7 +529,7 @@
   #printArea{display:none;}
 
   @media print{
-    @page{ size: A4; margin: 15mm; }
+    @page{ size: A4; margin: 10mm; }
     html, body{ background:#fff !important; }
     body *{ visibility:hidden; }
     #printArea, #printArea *{ visibility:visible; }
@@ -546,7 +546,13 @@
     #printArea .print-section h3{ font-family:'Aptos','Space Grotesk',sans-serif; font-size:13px; color:#0A4C6E;
       margin:14px 0 8px; }
     #printArea .print-page-break{ page-break-before:always; }
-    #printArea .balance-svg{ max-width:340px; display:block; margin:0 auto; background:#fff; }
+    /* Balance de Taylor : occupe toute la première page du rapport (grand format, centrée) */
+    #printArea .print-balance-page{
+      min-height:calc(297mm - 20mm); display:flex; flex-direction:column; justify-content:center;
+      page-break-after:always;
+    }
+    #printArea .print-balance-page .balance-svg{ max-width:100%; width:520px; display:block; margin:0 auto; background:#fff; }
+    #printArea .print-balance-page h2{ text-align:center; border-bottom:none; font-size:20px; }
     #printArea .todo-modal-icon-btn, #printArea .todo-checkbox, #printArea .param-clear-btn,
     #printArea .info-btn{ display:none !important; }
     #printArea .dosage-card-full, #printArea .todo-step{ break-inside:avoid; }
@@ -1852,16 +1858,17 @@
       }
     } else if(id === 'cl'){
       if(value < b[1]){
-        const g = Math.round((b[1] - value) * 6.7 * volume);
+        const clTarget = 1.2;
+        const g = Math.round((clTarget - value) * 6.7 * volume);
         const stabVal = getParamValue('stab');
         const stabBounds = getParamConfig('stab').bounds;
         const stabHighOrNear = stabVal !== null && stabVal >= stabBounds[2];
         if(stabHighOrNear){
-          const hypoG = Math.round((b[1] - value) * 5.83 * volume);
-          action = `Remonter le chlore libre vers ${fmt(1.2)} mg/L. Stabilisant déjà élevé ou proche du seuil : évite le chlore choc stabilisé, qui ferait encore grimper le stabilisant — utilise un chlore <b>non stabilisé</b> (Hypo-Chlore) à la place.`;
+          const hypoG = Math.round((clTarget - value) * 5.83 * volume);
+          action = `Remonter le chlore libre vers ${fmt(clTarget)} mg/L. Stabilisant déjà élevé ou proche du seuil : évite le chlore choc stabilisé, qui ferait encore grimper le stabilisant — utilise un chlore <b>non stabilisé</b> (Hypo-Chlore) à la place.`;
           options = [{ product: DJ_PRODUCTS.hypoChlore, amount: fmtKg(hypoG) }];
         } else {
-          action = `Remonter le chlore libre vers ${fmt(1.2)} mg/L (traitement choc ponctuel — le grammage ne s'applique qu'au chlore choc, pas au chlore lent)`;
+          action = `Remonter le chlore libre vers ${fmt(clTarget)} mg/L (traitement choc ponctuel — le grammage ne s'applique qu'au chlore choc, pas au chlore lent)`;
           options = [
             { product: DJ_PRODUCTS.chloreChoc, amount: fmtKg(g), label: 'Granulés' },
             { product: DJ_PRODUCTS.chloreChocPastilles, amount: fmtPastilles(g, 20), label: 'Pastilles (dosage facile)' }
@@ -1872,16 +1879,19 @@
       }
     } else if(id === 'tac'){
       const phVal = getParamValue('ph');
-      const phBounds = getParamConfig('ph').bounds;
       const phDecimals = PARAM_META.ph.decimals;
       const fmtPh = n => n.toFixed(phDecimals);
-      const phMid = (phBounds[1] + phBounds[2]) / 2;
+      // On se base sur la plage idéale AFFICHÉE au client (7,2 – 7,4, voir PARAM_META.ph.idealLabel),
+      // pas sur les bornes techniques de zoneIndex (6.8/7.0/7.4/7.6) qui sont plus larges et
+      // donneraient un seuil d'alerte trompeur (7,2 serait alors compté comme "moitié haute").
+      const phIdealLow = 7.2, phIdealHigh = 7.4;
+      const phMid = (phIdealLow + phIdealHigh) / 2;
       if(value < b[1]){
         const target = (b[1] + b[2]) / 2;
         const g = Math.round(((target - value) / 10) * 17 * volume);
         action = `Remonter le TAC vers ${fmt(target)} mg/L (fait aussi remonter légèrement le pH)`;
         if(phVal !== null && phVal >= phMid){
-          action += ` ⚠️ Le pH mesuré (${fmtPh(phVal)}) est déjà dans la moitié haute de sa plage idéale : cette hausse de TAC risque de le faire dépasser ${fmtPh(phBounds[2])}. Impossible de prédire précisément l'ampleur de la hausse (ça dépend du CO₂ dissous, non mesurable avec un test classique) — attends quelques heures après l'ajout, filtration en route, puis re-mesure le pH avant de le corriger si besoin.`;
+          action += ` ⚠️ Le pH mesuré (${fmtPh(phVal)}) est déjà dans la moitié haute de sa plage idéale : cette hausse de TAC risque de le faire dépasser ${fmtPh(phIdealHigh)}. Impossible de prédire précisément l'ampleur de la hausse (ça dépend du CO₂ dissous, non mesurable avec un test classique) — attends quelques heures après l'ajout, filtration en route, puis re-mesure le pH avant de le corriger si besoin.`;
         }
         options = [{ product: DJ_PRODUCTS.tacPlus, amount: fmtKg(g) }];
       } else if(value >= b[2]){
@@ -1889,7 +1899,7 @@
         const g = Math.round(((value - target) / 10) * 25 * volume);
         action = `Redescendre le TAC vers ${fmt(target)} mg/L (fait aussi baisser le pH)`;
         if(phVal !== null && phVal <= phMid){
-          action += ` ⚠️ Le pH mesuré (${fmtPh(phVal)}) est déjà dans la moitié basse de sa plage idéale : cette baisse de TAC risque de le faire descendre sous ${fmtPh(phBounds[1])}. Impossible de prédire précisément l'ampleur de la baisse — attends quelques heures après l'ajout, filtration en route, puis re-mesure le pH avant de le corriger si besoin.`;
+          action += ` ⚠️ Le pH mesuré (${fmtPh(phVal)}) est déjà dans la moitié basse de sa plage idéale : cette baisse de TAC risque de le faire descendre sous ${fmtPh(phIdealLow)}. Impossible de prédire précisément l'ampleur de la baisse — attends quelques heures après l'ajout, filtration en route, puis re-mesure le pH avant de le corriger si besoin.`;
         }
         options = [{ product: DJ_PRODUCTS.tacMoins, amount: fmtKg(g) }];
       }
@@ -2085,15 +2095,36 @@
       };
     }
     if(selectedAlgaeColor === 'vertclair'){
-      const chocG = Math.round(80 * volume / 10);
+      const shockTargetG = Math.round(80 * volume / 10);
+      // Si le chlore libre est déjà trop bas, la carte "Chlore libre" a déjà prévu d'en ajouter
+      // pour atteindre 1,2 mg/L : on ne remet pas cette quantité une seconde fois par-dessus,
+      // seulement le complément nécessaire pour atteindre la dose choc anti-algues.
+      const clVal = getParamValue('cl');
+      const clBounds = getParamConfig('cl').bounds;
+      let alreadyPlannedG = 0;
+      if(clVal !== null && clVal < clBounds[1]){
+        alreadyPlannedG = Math.round((1.2 - clVal) * 6.7 * volume);
+      }
+      const chocG = Math.max(0, shockTargetG - alreadyPlannedG);
+      const noteAlreadyPlanned = alreadyPlannedG > 0
+        ? ` Le chlore déjà prévu pour la correction du chlore libre (${fmtKg(alreadyPlannedG)}) compte dans le total : n'ajoute que le complément indiqué ci-dessous.`
+        : '';
       const stabVal = getParamValue('stab');
       const stabBounds = getParamConfig('stab').bounds;
       const stabHighOrNear = stabVal !== null && stabVal >= stabBounds[2];
       if(stabHighOrNear){
-        const hypoG = Math.round(70 * volume / 10);
+        const shockTargetHypoG = Math.round(70 * volume / 10);
+        let alreadyPlannedHypoG = 0;
+        if(clVal !== null && clVal < clBounds[1]){
+          alreadyPlannedHypoG = Math.round((1.2 - clVal) * 5.83 * volume);
+        }
+        const hypoG = Math.max(0, shockTargetHypoG - alreadyPlannedHypoG);
+        const noteHypo = alreadyPlannedHypoG > 0
+          ? ` Le chlore déjà prévu pour la correction du chlore libre (${fmtKg(alreadyPlannedHypoG)}) compte dans le total : n'ajoute que le complément indiqué ci-dessous.`
+          : '';
         return {
           title: 'Algue verte (légère)',
-          detail: `Brosse les parois et le fond avant traitement. Stabilisant déjà élevé ou proche du seuil : utilise un chlore <b>non stabilisé</b> (Hypo-Chlore) pour le choc plutôt que du chlore choc stabilisé.`,
+          detail: `Brosse les parois et le fond avant traitement. Stabilisant déjà élevé ou proche du seuil : utilise un chlore <b>non stabilisé</b> (Hypo-Chlore) pour le choc plutôt que du chlore choc stabilisé.${noteHypo}`,
           options: [
             { product: DJ_PRODUCTS.hypoChlore, label: 'Traitement choc', amount: fmtKg(hypoG) }
           ]
@@ -2101,7 +2132,7 @@
       }
       return {
         title: 'Algue verte (légère)',
-        detail: `Brosse les parois et le fond avant traitement, puis fais un choc au chlore.`,
+        detail: `Brosse les parois et le fond avant traitement, puis fais un choc au chlore.${noteAlreadyPlanned}`,
         options: [
           { product: DJ_PRODUCTS.chloreChoc, label: 'Granulés', amount: fmtKg(chocG) },
           { product: DJ_PRODUCTS.chloreChocPastilles, label: 'Pastilles (dosage facile)', amount: fmtPastilles(chocG, 20) }
@@ -2384,6 +2415,13 @@
       const testerLabel = getTesterLabel();
       const treatmentLabel = TREATMENT_LABELS[selectedTreatment] || '';
 
+      const balanceVisible = document.getElementById('balanceChartSection').offsetParent !== null;
+      const nomogramSection = balanceVisible
+        ? `<div class="print-section print-balance-page"><h2>Balance de Taylor</h2>${document.getElementById('nomogramSvg').outerHTML}
+            <p style="text-align:center;">${document.getElementById('lsiValue').innerHTML} — ${document.getElementById('lsiStatus').textContent}</p>
+          </div>`
+        : '';
+
       const generalInfoSection = `
         <div class="print-section">
           <h2>Informations générales</h2>
@@ -2400,14 +2438,7 @@
         </div>
       `;
 
-      const balanceVisible = document.getElementById('balanceChartSection').offsetParent !== null;
-      const nomogramSection = balanceVisible
-        ? `<div class="print-section"><h2>Balance de Taylor</h2>${document.getElementById('nomogramSvg').outerHTML}
-            <p style="text-align:center;">${document.getElementById('lsiValue').innerHTML} — ${document.getElementById('lsiStatus').textContent}</p>
-          </div>`
-        : '';
-
-      const dosageSection = `<div class="print-section print-page-break"><h2>Ajustements recommandés</h2>${document.getElementById('dosageList').innerHTML}</div>`;
+      const dosageSection = `<div class="print-section"><h2>Ajustements recommandés</h2>${document.getElementById('dosageList').innerHTML}</div>`;
       const todoSection = `<div class="print-section print-page-break"><h2>Étapes du traitement</h2>${document.getElementById('todoModalList').innerHTML}</div>`;
 
       document.getElementById('printArea').innerHTML = `
@@ -2415,8 +2446,8 @@
           <div class="print-title">Wavia — Rapport d'analyse</div>
           <div class="print-meta">Analyse du ${dateStr} à ${timeStr}</div>
         </div>
-        ${generalInfoSection}
         ${nomogramSection}
+        ${generalInfoSection}
         ${dosageSection}
         ${todoSection}
       `;
