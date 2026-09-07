@@ -1872,18 +1872,21 @@
       }
     } else if(id === 'tac'){
       if(value < b[1]){
-        const g = Math.round(((b[1] - value) / 10) * 17 * volume);
-        action = `Remonter le TAC vers ${fmt((b[1]+b[2])/2)} mg/L (fait aussi remonter légèrement le pH)`;
+        const target = (b[1] + b[2]) / 2;
+        const g = Math.round(((target - value) / 10) * 17 * volume);
+        action = `Remonter le TAC vers ${fmt(target)} mg/L (fait aussi remonter légèrement le pH)`;
         options = [{ product: DJ_PRODUCTS.tacPlus, amount: fmtKg(g) }];
       } else if(value >= b[2]){
-        const g = Math.round(((value - b[2]) / 10) * 25 * volume);
-        action = `Redescendre le TAC vers ${fmt((b[1]+b[2])/2)} mg/L (fait aussi baisser le pH)`;
+        const target = (b[1] + b[2]) / 2;
+        const g = Math.round(((value - target) / 10) * 25 * volume);
+        action = `Redescendre le TAC vers ${fmt(target)} mg/L (fait aussi baisser le pH)`;
         options = [{ product: DJ_PRODUCTS.tacMoins, amount: fmtKg(g) }];
       }
     } else if(id === 'th'){
       if(value < b[1]){
-        const g = Math.round(((b[1] - value) / 10) * 11 * volume);
-        action = `Remonter le TH vers ${fmt((b[1]+b[2])/2)} mg/L`;
+        const target = (b[1] + b[2]) / 2;
+        const g = Math.round(((target - value) / 10) * 11 * volume);
+        action = `Remonter le TH vers ${fmt(target)} mg/L`;
         options = [{ product: DJ_PRODUCTS.thPlus, amount: fmtKg(g) }];
       } else if(value >= b[2]){
         const preventiveMl = Math.round(17.5 * volume);
@@ -1899,8 +1902,9 @@
       }
     } else if(id === 'stab'){
       if(value < b[1]){
-        const g = Math.round((b[1] - value) * 10 * volume);
-        action = `Remonter le stabilisant vers ${fmt((b[1]+b[2])/2)} mg/L — protège le chlore de la destruction par les UV. Si tu utilises déjà un chlore <b>stabilisé</b> (choc ou lent), il en apporte automatiquement, inutile d'en rajouter en plus. Le Stabilisateur de chlore séparé ne concerne que les traitements au chlore <b>non stabilisé</b> (Hypo-Chlore).`;
+        const target = (b[1] + b[2]) / 2;
+        const g = Math.round((target - value) * 10 * volume);
+        action = `Remonter le stabilisant vers ${fmt(target)} mg/L — protège le chlore de la destruction par les UV. Si tu utilises déjà un chlore <b>stabilisé</b> (choc ou lent), il en apporte automatiquement, inutile d'en rajouter en plus. Le Stabilisateur de chlore séparé ne concerne que les traitements au chlore <b>non stabilisé</b> (Hypo-Chlore).`;
         options = [{ product: DJ_PRODUCTS.stabilisant, amount: fmtKg(g), label: 'Si chlore non stabilisé (Hypo-Chlore) uniquement' }];
       } else if(value >= b[3]){
         // Critique (>70) : seule la dilution fonctionne, le stabilisant ne se consomme jamais.
