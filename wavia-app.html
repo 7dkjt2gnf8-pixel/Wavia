@@ -1871,15 +1871,26 @@
         action = 'Trop élevé : laisser baisser naturellement (arrêt du traitement) ou diluer une partie de l\'eau — pas de produit correcteur.';
       }
     } else if(id === 'tac'){
+      const phVal = getParamValue('ph');
+      const phBounds = getParamConfig('ph').bounds;
+      const phDecimals = PARAM_META.ph.decimals;
+      const fmtPh = n => n.toFixed(phDecimals);
+      const phMid = (phBounds[1] + phBounds[2]) / 2;
       if(value < b[1]){
         const target = (b[1] + b[2]) / 2;
         const g = Math.round(((target - value) / 10) * 17 * volume);
         action = `Remonter le TAC vers ${fmt(target)} mg/L (fait aussi remonter légèrement le pH)`;
+        if(phVal !== null && phVal >= phMid){
+          action += ` ⚠️ Le pH mesuré (${fmtPh(phVal)}) est déjà dans la moitié haute de sa plage idéale : cette hausse de TAC risque de le faire dépasser ${fmtPh(phBounds[2])}. Impossible de prédire précisément l'ampleur de la hausse (ça dépend du CO₂ dissous, non mesurable avec un test classique) — attends quelques heures après l'ajout, filtration en route, puis re-mesure le pH avant de le corriger si besoin.`;
+        }
         options = [{ product: DJ_PRODUCTS.tacPlus, amount: fmtKg(g) }];
       } else if(value >= b[2]){
         const target = (b[1] + b[2]) / 2;
         const g = Math.round(((value - target) / 10) * 25 * volume);
         action = `Redescendre le TAC vers ${fmt(target)} mg/L (fait aussi baisser le pH)`;
+        if(phVal !== null && phVal <= phMid){
+          action += ` ⚠️ Le pH mesuré (${fmtPh(phVal)}) est déjà dans la moitié basse de sa plage idéale : cette baisse de TAC risque de le faire descendre sous ${fmtPh(phBounds[1])}. Impossible de prédire précisément l'ampleur de la baisse — attends quelques heures après l'ajout, filtration en route, puis re-mesure le pH avant de le corriger si besoin.`;
+        }
         options = [{ product: DJ_PRODUCTS.tacMoins, amount: fmtKg(g) }];
       }
     } else if(id === 'th'){
