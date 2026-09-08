@@ -1947,10 +1947,11 @@
           const fraction = Math.max(0, Math.min(1, (value - target) / (value - TAP_WATER_TH)));
           const renewM3 = fraction * volume;
           action = `Renouvelle environ ${fmtM3(renewM3)} (${Math.round(fraction*100)} % du volume) pour ramener le TH vers ${fmt(target)} mg/L, en te basant sur une eau du robinet moyenne en France (~${TAP_WATER_TH} mg/L). La dureté réelle varie beaucoup selon la région (de très douce en Bretagne à très dure en Île-de-France) — utilise la valeur de ton secteur si tu la connais pour un calcul plus précis.`;
+          options = [{ product: null, isRenewal: true, amount: `${fmtM3(renewM3)} (${Math.round(fraction*100)}%)`, label: "Renouvellement d'eau" }];
         } else {
           action = 'Pas de correction directe possible : diluer une partie de l\'eau. En préventif, 15 à 20 mL/m³ à chaque appoint d\'eau.';
+          options = [{ product: DJ_PRODUCTS.anticalcaire, amount: fmtL(preventiveMl) }];
         }
-        options = [{ product: DJ_PRODUCTS.anticalcaire, amount: fmtL(preventiveMl) }];
       }
     } else if(id === 'stab'){
       if(value < b[1]){
@@ -2356,9 +2357,9 @@
                 return `<div class="todo-step-thumb todo-step-thumb-empty">${isChloreWait ? HOURGLASS_ICON_SVG : RENEWAL_ICON_SVG}</div>`;
               })()}
               <div class="todo-step-info">
-                <div class="todo-step-product">${s.option && s.option.product ? s.option.product.name : (s.id === 'cl' ? 'Attendre que le taux baisse' : 'Voir détail')}</div>
+                <div class="todo-step-product">${s.option && s.option.product ? s.option.product.name : (s.option && s.option.label ? s.option.label : (s.id === 'cl' ? 'Attendre que le taux baisse' : 'Voir détail'))}</div>
               </div>
-              ${s.option && s.option.amount ? `<div class="todo-step-cta">Ajouter<br>${s.option.amount}</div>` : ''}
+              ${s.option && s.option.amount ? `<div class="todo-step-cta">${s.option.isRenewal ? 'Renouveler' : 'Ajouter'}<br>${s.option.amount}</div>` : ''}
               <label class="todo-checkbox">
                 <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleTodoStep('${s.id}', this.checked)">
                 <span class="todo-checkbox-box"></span>
@@ -2458,7 +2459,12 @@
 
   function exportPDF(){
     try{
-      toast('Préparation du rapport…');
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      if(isStandalone){
+        toast("Export PDF limité depuis l'app installée sur iOS (limite Apple). Pour un PDF complet : ouvre le lien Wavia dans Safari plutôt que depuis l'icône.", 5000);
+      } else {
+        toast('Préparation du rapport…');
+      }
       const now = new Date();
       const dateStr = now.toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' });
       const timeStr = now.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
