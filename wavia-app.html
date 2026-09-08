@@ -84,12 +84,12 @@
     --z-good:#1FAE8A;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-  html,body{margin:0;padding:0;height:100%;background:var(--ocean-deep);touch-action:pan-x pan-y;}
+  html,body{margin:0;padding:0;height:100%;background:var(--ocean-deep);touch-action:pan-x pan-y;overflow-x:hidden;}
   body{
     font-family:'Aptos','Inter',sans-serif;color:var(--ink);overflow:hidden;-webkit-font-smoothing:antialiased;
     -webkit-touch-callout:none;-webkit-user-select:none;user-select:none;
   }
-  .stage{position:relative;width:100%;height:100vh;height:100dvh;}
+  .stage{position:relative;width:100%;height:100vh;height:100dvh;overflow-x:hidden;}
 
   /* ---------- SPLASH ---------- */
   .splash{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -113,13 +113,13 @@
   .home-actions-row{display:flex;gap:16px;}
   .home-square{width:120px;height:120px;border-radius:22px;background:#fff;border:none;cursor:pointer;
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
-    box-shadow:0 12px 28px rgba(0,0,0,.22);touch-action:manipulation;}
+    box-shadow:0 12px 28px rgba(0,0,0,.22);touch-action:pan-x pan-y;}
   .home-square:active{transform:scale(.96);}
   .home-square span{font-family:'Aptos','Space Grotesk',sans-serif;font-weight:700;font-size:12.5px;
     line-height:1.25;color:var(--ocean-deep);text-align:center;}
   .home-settings-btn{width:100%;height:56px;border-radius:18px;background:#fff;border:none;cursor:pointer;
     display:flex;align-items:center;justify-content:center;gap:9px;
-    box-shadow:0 10px 24px rgba(0,0,0,.18);touch-action:manipulation;}
+    box-shadow:0 10px 24px rgba(0,0,0,.18);touch-action:pan-x pan-y;}
   .home-settings-btn:active{transform:scale(.97);}
   .home-settings-btn span{font-family:'Aptos','Space Grotesk',sans-serif;font-weight:700;font-size:13px;
     color:var(--ocean-deep);}
@@ -143,7 +143,7 @@
   .subgreeting{font-size:14px;color:var(--ink-soft);margin-bottom:26px;}
   .cards{display:flex;flex-direction:column;gap:14px;}
   .card{display:flex;align-items:center;gap:16px;border-radius:18px;padding:20px;border:1px solid var(--line);
-    background:var(--card);cursor:pointer;text-align:left;font-family:inherit;transition:transform .15s ease;touch-action:manipulation;}
+    background:var(--card);cursor:pointer;text-align:left;font-family:inherit;transition:transform .15s ease;touch-action:pan-x pan-y;}
   .card:active{transform:scale(.98);}
   .card.primary{background:linear-gradient(135deg,var(--ocean-mid),var(--ocean-deep));border:none;box-shadow:0 10px 24px -10px rgba(10,76,110,.55);}
   .card-icon{width:46px;height:46px;border-radius:13px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
@@ -175,7 +175,7 @@
   .field-group{margin-bottom:14px;}
   .field-label{display:block;font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:6px;}
   .field-input, .field-textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-box;padding:11px 12px;border-radius:12px;border:1px solid var(--line);
-    background:#fff;font-family:'Aptos','Inter',sans-serif;font-size:14.5px;color:var(--ink);}
+    background:#fff;font-family:'Aptos','Inter',sans-serif;font-size:16px;color:var(--ink);}
   .field-textarea{resize:none;min-height:60px;line-height:1.4;}
   .field-input:focus, .field-textarea:focus{outline:2px solid var(--turq-mid);outline-offset:1px;border-color:var(--turq-mid);}
   .field-input.field-missing{border-color:var(--z-critical);box-shadow:0 0 0 3px rgba(226,72,61,.15);animation:fieldMissingPulse 1.4s ease 2;}
@@ -186,7 +186,7 @@
 
   .choice-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
   .choice-chip{padding:9px 14px;border-radius:12px;border:1px solid var(--line);background:#fff;
-    font-family:'Aptos','Inter',sans-serif;font-size:13px;font-weight:600;color:var(--ink-soft);cursor:pointer;touch-action:manipulation;}
+    font-family:'Aptos','Inter',sans-serif;font-size:13px;font-weight:600;color:var(--ink-soft);cursor:pointer;touch-action:pan-x pan-y;}
   .choice-chip.active{background:var(--ocean-mid);border-color:var(--ocean-mid);color:#fff;}
 
   /* ---------- FORME DE PISCINE (écran "Nouveau client", non utilisé actuellement) ---------- */
@@ -195,7 +195,7 @@
 
   .shape-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
   .shape-card{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 8px 12px;
-    border-radius:16px;border:1px solid var(--line);background:#EAF6F7;cursor:pointer;touch-action:manipulation;}
+    border-radius:16px;border:1px solid var(--line);background:#EAF6F7;cursor:pointer;touch-action:pan-x pan-y;}
   .shape-card svg{width:100%;max-width:118px;height:auto;}
   .shape-card span{font-family:'Aptos','Space Grotesk',sans-serif;font-weight:700;font-size:11.5px;
     letter-spacing:.3px;text-transform:uppercase;color:var(--ocean-deep);text-align:center;line-height:1.3;}
@@ -208,7 +208,7 @@
   .water-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
   .water-grid-2{grid-template-columns:1fr 1fr;}
   .water-card{display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px;
-    border-radius:10px;border:2px solid var(--line);background:#fff;cursor:pointer;touch-action:manipulation;overflow:hidden;}
+    border-radius:10px;border:2px solid var(--line);background:#fff;cursor:pointer;touch-action:pan-x pan-y;overflow:hidden;}
   .water-card img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:7px;display:block;}
   .water-swatch-none{width:100%;aspect-ratio:1/1;border-radius:7px;background:#EEF3F4;
     display:flex;align-items:center;justify-content:center;}
@@ -233,7 +233,7 @@
   .results-actions{display:flex;gap:10px;margin-top:18px;}
   .results-action-btn{flex:1;padding:13px 10px;border-radius:14px;border:1.5px solid var(--line);
     background:#fff;color:var(--ink);font-family:'Aptos','Space Grotesk',sans-serif;font-weight:600;
-    font-size:13px;cursor:pointer;touch-action:manipulation;
+    font-size:13px;cursor:pointer;touch-action:pan-x pan-y;
     display:flex;align-items:center;justify-content:center;gap:7px;}
   .results-action-btn svg{flex-shrink:0;}
   .results-action-btn.primary{background:linear-gradient(135deg,var(--turq-mid),var(--ocean-mid));
@@ -305,7 +305,7 @@
 
   /* ---------- ÉCRAN HISTORIQUE (liste des analyses sauvegardées) ---------- */
   .historique-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;
-    cursor:pointer;touch-action:manipulation;
+    cursor:pointer;touch-action:pan-x pan-y;
     display:flex;align-items:center;justify-content:space-between;gap:10px;}
   .historique-card-info{min-width:0;}
   .historique-client{font-family:'Aptos','Space Grotesk',sans-serif;font-weight:700;font-size:14.5px;color:var(--ink);}
@@ -395,7 +395,7 @@
   .dosage-cross{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);}
   .dosage-cross .dosage-detail{color:var(--ink);}
   .th-inline-row{display:flex;gap:8px;margin-top:10px;}
-  .th-inline-row .field-input{flex:1;padding:9px 10px;font-size:14px;}
+  .th-inline-row .field-input{flex:1;padding:9px 10px;font-size:16px;}
   .th-inline-btn{flex-shrink:0;padding:0 16px;border:none;border-radius:10px;background:var(--ocean-mid);
     color:#fff;font-family:'Aptos','Space Grotesk',sans-serif;font-weight:600;font-size:13px;cursor:pointer;}
   .th-inline-btn:active{background:var(--ocean-deep);}
@@ -414,7 +414,7 @@
   .scan-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:9px;
     padding:12px;border-radius:14px;border:1.5px dashed var(--ocean-mid);
     background:#fff;color:var(--ocean-deep);font-family:'Aptos','Space Grotesk',sans-serif;font-weight:600;
-    font-size:13.5px;cursor:pointer;touch-action:manipulation;}
+    font-size:13.5px;cursor:pointer;touch-action:pan-x pan-y;}
   .scan-btn:active{background:#EAF6F7;}
   .scan-btn.busy{opacity:.6;pointer-events:none;}
   .scan-status{font-size:11.5px;color:var(--ink-soft);text-align:center;margin-top:8px;min-height:14px;}
@@ -432,8 +432,8 @@
   .param-row{display:flex;align-items:center;gap:6px;}
   .param-name{font-family:'Aptos','Space Grotesk',sans-serif;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .param-unit-inline{font-size:10px;color:var(--ink-soft);font-family:'Aptos','IBM Plex Mono',monospace;flex-shrink:0;}
-  .param-value-input{margin-left:auto;flex-shrink:0;width:74px;padding:6px 8px;border-radius:9px;
-    border:1.5px solid var(--line);background:#F4FAFB;font-family:'Aptos','IBM Plex Mono',monospace;font-size:15px;
+  .param-value-input{margin-left:auto;flex-shrink:0;width:86px;padding:6px 6px;border-radius:9px;
+    border:1.5px solid var(--line);background:#F4FAFB;font-family:'Aptos','IBM Plex Mono',monospace;font-size:16px;
     font-weight:500;color:var(--ink);text-align:center;transition:background .15s ease, border-color .15s ease, color .15s ease;}
   .param-value-input:focus{outline:2px solid var(--turq-mid);outline-offset:1px;border-color:var(--turq-mid);}
   .param-clear-btn{display:none;flex-shrink:0;width:20px;height:20px;border-radius:50%;border:none;
@@ -548,7 +548,7 @@
       min-height:calc(297mm - 20mm); display:flex; flex-direction:column; justify-content:center;
       page-break-after:always;
     }
-    #printArea .print-balance-page .balance-svg{ max-width:100%; width:520px; display:block; margin:0 auto; background:#fff; }
+    #printArea .print-balance-page .balance-svg{ max-width:100%; max-height:none; width:600px; height:auto; display:block; margin:0 auto; background:#fff; }
     #printArea .print-balance-page h2{ text-align:center; border-bottom:none; font-size:20px; }
     #printArea .todo-modal-icon-btn, #printArea .todo-checkbox, #printArea .param-clear-btn,
     #printArea .info-btn{ display:none !important; }
@@ -789,7 +789,7 @@
       </div>
       <div class="field-group" style="margin-bottom:18px;">
         <label class="field-label" for="saveDateTime">Date / heure de l'analyse</label>
-        <input class="field-input" type="datetime-local" id="saveDateTime" style="text-align:center;font-size:14px;width:100%;max-width:100%;box-sizing:border-box;">
+        <input class="field-input" type="datetime-local" id="saveDateTime" style="text-align:center;font-size:16px;width:100%;max-width:100%;box-sizing:border-box;">
       </div>
       <div class="save-modal-buttons">
         <button type="button" class="save-modal-btn" id="saveModalCancel">Annuler</button>
@@ -935,6 +935,18 @@
 </div>
 
 <script>
+  /* ---------- BLOCAGE DU ZOOM (ceinture et bretelles) ----------
+     Le CSS (touch-action + meta viewport user-scalable=no) bloque déjà le zoom
+     dans la plupart des cas, mais Safari iOS a ses propres évènements "gesture"
+     (pincement à deux doigts) qui ne sont pas toujours fiablement supprimés par
+     touch-action seul. On les bloque explicitement ici. Le double-tap zoom est
+     lui déjà couvert par touch-action seul — pas besoin d'y toucher côté JS,
+     ça risquerait de casser des doubles taps rapides légitimes sur deux boutons
+     différents. */
+  ['gesturestart','gesturechange','gestureend'].forEach(evt=>{
+    document.addEventListener(evt, e => e.preventDefault());
+  });
+
   /* ---------- SPLASH / HOME ---------- */
   const splash = document.getElementById('splash');
   let revealed = false;
@@ -1334,7 +1346,7 @@
     [poolVolumeInput, poolTempInput].forEach(inp => inp.classList.remove('field-missing'));
     if(missing.length === 0) return;
     missing.forEach(inp => inp.classList.add('field-missing'));
-    missing[0].scrollIntoView({ behavior:'smooth', block:'center' });
+    missing[0].scrollIntoView({ behavior:'smooth', block:'center', inline:'nearest' });
     toast('Renseigne le volume et la température pour des préconisations précises');
   }
   [poolVolumeInput, poolTempInput].forEach(inp=>{
@@ -2487,7 +2499,7 @@
         ${dosageSection}
         ${todoSection}
       `;
-      setTimeout(()=>{ window.print(); }, 100);
+      window.print();
     }catch(e){
       toast('Erreur lors de la génération du PDF : ' + e.message, 4000);
     }
