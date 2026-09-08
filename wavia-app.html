@@ -528,6 +528,7 @@
   @media print{
     @page{ size: A4; margin: 10mm; }
     html, body{ background:#fff !important; }
+    .stage{ height:auto !important; min-height:0 !important; overflow:visible !important; position:static !important; }
     body *{ visibility:hidden; }
     #printArea, #printArea *{ visibility:visible; }
     #printArea{
@@ -542,12 +543,13 @@
       border-bottom:1px solid #DCEAEE; padding-bottom:6px; margin-bottom:12px; }
     #printArea .print-section h3{ font-family:'Aptos','Space Grotesk',sans-serif; font-size:13px; color:#0A4C6E;
       margin:14px 0 8px; }
-    #printArea .print-page-break{ page-break-before:always; }
-    /* Balance de Taylor : occupe toute la première page du rapport (grand format, centrée) */
-    #printArea .print-balance-page{
-      min-height:calc(297mm - 20mm); display:flex; flex-direction:column; justify-content:center;
-      page-break-after:always;
-    }
+    #printArea .print-page-break{ page-break-before:always; break-before:page; }
+    /* Balance de Taylor : grand format, seule sur sa page. On évite volontairement toute
+       hauteur forcée en unités de page (mm) combinée à du flex — ce combo n'est pas fiable
+       sur tous les moteurs de rendu d'impression (notamment iOS en PWA installée), où il
+       peut faire disparaître tout le contenu situé après. Une simple image large suivie
+       d'un saut de page est beaucoup plus robuste. */
+    #printArea .print-balance-page{ page-break-after:always; break-after:page; text-align:center; padding-top:20px; }
     #printArea .print-balance-page .balance-svg{ max-width:100%; max-height:none; width:600px; height:auto; display:block; margin:0 auto; background:#fff; }
     #printArea .print-balance-page h2{ text-align:center; border-bottom:none; font-size:20px; }
     #printArea .todo-modal-icon-btn, #printArea .todo-checkbox, #printArea .param-clear-btn,
