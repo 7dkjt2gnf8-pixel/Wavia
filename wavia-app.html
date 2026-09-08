@@ -549,7 +549,7 @@
        sur tous les moteurs de rendu d'impression (notamment iOS en PWA installée), où il
        peut faire disparaître tout le contenu situé après. Une simple image large suivie
        d'un saut de page est beaucoup plus robuste. */
-    #printArea .print-balance-page{ page-break-after:always; break-after:page; text-align:center; padding-top:20px; }
+    #printArea .print-balance-page{ text-align:center; padding-top:20px; }
     #printArea .print-balance-page .balance-svg{ max-width:100%; max-height:none; width:600px; height:auto; display:block; margin:0 auto; background:#fff; }
     #printArea .print-balance-page h2{ text-align:center; border-bottom:none; font-size:20px; }
     #printArea .todo-modal-icon-btn, #printArea .todo-checkbox, #printArea .param-clear-btn,
@@ -2494,8 +2494,8 @@
         </div>
       `;
 
-      const dosageSection = `<div class="print-section"><h2>Ajustements recommandés</h2>${document.getElementById('dosageList').innerHTML}</div>`;
-      const todoSection = `<div class="print-section print-page-break"><h2>Étapes du traitement</h2>${document.getElementById('todoModalList').innerHTML}</div>`;
+      const dosageSection = `<div class="print-section print-page-break"><h2>Ajustements recommandés</h2>${document.getElementById('dosageList').innerHTML}</div>`;
+      const todoSection = `<div class="print-section"><h2>Étapes du traitement</h2>${document.getElementById('todoModalList').innerHTML}</div>`;
 
       document.getElementById('printArea').innerHTML = `
         <div class="print-header">
