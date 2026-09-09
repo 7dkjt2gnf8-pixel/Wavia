@@ -1011,6 +1011,7 @@
     if(analysisDirty){
       document.getElementById('newAnalysisPrompt').classList.add('open');
     } else {
+      clearAnalysisData();
       openAnalyse();
     }
   }
@@ -1032,7 +1033,7 @@
       c.classList.toggle('active', c.dataset.algae === 'aucune');
     });
     const level = parseInt(document.querySelector('.level-chip.active').dataset.level, 10);
-    renderParams(level);
+    renderParams(level, true);
     analysisDirty = false;
   }
   document.getElementById('newAnalysisErase').addEventListener('click', ()=>{
@@ -1306,12 +1307,14 @@
       c.classList.toggle('active', c.dataset.treatment === selectedTreatment);
     });
 
-    // Pré-remplit les valeurs sauvegardées avant de reconstruire les cartes de saisie
+    // Repart d'un état propre avant d'appliquer les valeurs de l'analyse rechargée,
+    // pour ne jamais mélanger ces valeurs avec des données restées d'une session précédente.
+    Object.keys(savedState).forEach(k => delete savedState[k]);
     Object.entries(record.values || {}).forEach(([pid, val])=>{
       savedState[pid] = { value: String(val), touched: true };
     });
 
-    renderParams(level);
+    renderParams(level, true);
     analysisDirty = true;
     closeHistorique();
     openAnalyse();
@@ -2850,10 +2853,12 @@
   // Conserve valeur + statut "saisi" de chaque paramètre quand on change de niveau
   const savedState = {};
 
-  function renderParams(level){
-    listEl.querySelectorAll('input[data-id]').forEach(inp=>{
-      savedState[inp.dataset.id] = { value: inp.value, touched: inp.dataset.touched === 'true' };
-    });
+  function renderParams(level, skipCapture){
+    if(!skipCapture){
+      listEl.querySelectorAll('input[data-id]').forEach(inp=>{
+        savedState[inp.dataset.id] = { value: inp.value, touched: inp.dataset.touched === 'true' };
+      });
+    }
 
     listEl.innerHTML = '';
     PARAMS.filter(p => p.levels.includes(level) && !getDisabledParamIds().includes(p.id)).forEach(p=>{
