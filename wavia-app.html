@@ -1848,6 +1848,7 @@
     // TH, sel et stabilisant trop hauts n'ont pas de correction chimique directe :
     // le badge dit "Trop élevé", pas "À corriger" (seul le renouvellement d'eau les fait baisser)
     const badgeOverride = (id === 'th' && zi >= 3) ? 'Trop élevé'
+      : (id === 'cl' && zi >= 3) ? 'Trop élevé'
       : (id === 'sel' && zi === 4) ? 'Trop élevé'
       : (id === 'sel' && zi === 3) ? 'À surveiller'
       : (id === 'stab' && zi === 4) ? 'Trop élevé'
@@ -1909,7 +1910,7 @@
           ];
         }
       } else if(value >= b[2]){
-        action = 'Trop élevé : laisser baisser naturellement (arrêt du traitement) ou diluer une partie de l\'eau — pas de produit correcteur.';
+        action = 'Taux de chlore trop élevé : attends que le taux baisse naturellement (arrêt du traitement). Une dilution partielle de l\'eau peut aussi accélérer la baisse — pas de produit correcteur.';
       }
     } else if(id === 'tac'){
       const phVal = getParamValue('ph');
@@ -2780,7 +2781,7 @@
     },
     {
       id:'cl', name:'Chlore libre', unit:'mg/L', min:0, max:6, step:0.1, def:1.6,
-      bounds:[0.5, 1.0, 3.0, 5.0], levels:[1,2,3],
+      bounds:[0.5, 1.0, 1.5, 5.0], levels:[1,2,3],
       explain:"Désinfecte l'eau. Trop bas : plus de protection contre bactéries et algues. Trop haut : irritant pour la peau et les yeux."
     },
     {
